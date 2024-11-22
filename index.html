@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Гра Змійка</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #f4f4f4;
+        }
+
+        canvas {
+            border: 2px solid #000;
+            background-color: #fff;
+        }
+
+        .score {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(3, 60px);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .button {
+            width: 60px;
+            height: 60px;
+            background-color: #000;
+            color: #fff;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            user-select: none;
+            cursor: pointer;
+        }
+
+        .button:active {
+            background-color: #555;
+        }
+
+        .spacer {
+            visibility: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div class="score">Очки: 0</div>
+    <canvas id="gameCanvas" width="300" height="300"></canvas>
+    <div class="controls">
+        <div class="spacer"></div>
+        <div class="button" id="up">▲</div>
+        <div class="spacer"></div>
+        <div class="button" id="left">◀</div>
+        <div class="button" id="down">▼</div>
+        <div class="button" id="right">▶</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const gridSize = 15;
+        let score = 0;
+        let snake = [{ x: 5 * gridSize, y: 5 * gridSize }];
+        let food = { x: Math.floor(Math.random() * 20) * gridSize, y: Math.floor(Math.random() * 20) * gridSize };
+        let dx = gridSize, dy = 0;
+        let gameOver = false;
+
+        function drawSnake() {
+            ctx.fillStyle = "green";
+            snake.forEach(segment => {
+                ctx.fillRect(segment.x, segment.y, gridSize, gridSize);
+            });
+        }
+
+        function drawFood() {
+            ctx.fillStyle = "red";
+            ctx.fillRect(food.x, food.y, gridSize, gridSize);
+        }
+
+        function updateSnakePosition() {
+            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+            snake.unshift(head);
+
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                document.querySelector('.score').textContent = `Очки: ${score}`;
+                food = { x: Math.floor(Math.random() * 20) * gridSize, y: Math.floor(Math.random() * 20) * gridSize };
+            } else {
+                snake.pop();
+            }
+        }
+
+        function checkCollision() {
+            const head = snake[0];
+            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
+                gameOver = true;
+            }
+            for (let i = 1; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) {
+                    gameOver = true;
+                }
+            }
+        }
+
+        function update() {
+            if (gameOver) {
+                ctx.fillStyle = "black";
+                ctx.font = "20px Arial";
+                ctx.fillText("Гра закінчена!", 70, 150);
+                return;
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            updateSnakePosition();
+            checkCollision();
+            drawSnake();
+            drawFood();
+            setTimeout(update, 100);
+        }
+
+        function changeDirection(direction) {
+            if (direction === "up" && dy === 0) {
+                dx = 0;
+                dy = -gridSize;
+            }
+            if (direction === "down" && dy === 0) {
+                dx = 0;
+                dy = gridSize;
+            }
+            if (direction === "left" && dx === 0) {
+                dx = -gridSize;
+                dy = 0;
+            }
+            if (direction === "right" && dx === 0) {
+                dx = gridSize;
+                dy = 0;
+            }
+        }
+
+        // Додаємо події для кнопок
+        document.getElementById("up").addEventListener("click", () => changeDirection("up"));
+        document.getElementById("down").addEventListener("click", () => changeDirection("down"));
+        document.getElementById("left").addEventListener("click", () => changeDirection("left"));
+        document.getElementById("right").addEventListener("click", () => changeDirection("right"));
+
+        update();
+    </script>
+</body>
+</html>
